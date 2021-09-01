@@ -75,7 +75,7 @@ function deployBeanstalkVersion(
   environmentName,
   versionLabel,
   newEnvironment,
-  environmentTemplate = ""
+  environmentTemplate
 ) {
   const Operation = newEnvironment ? "CreateEnvironment" : "UpdateEnvironment";
   const TemplateName = environmentTemplate;
