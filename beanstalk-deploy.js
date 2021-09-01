@@ -3,8 +3,6 @@
 
 const awsApiRequest = require("./aws-api-request");
 const fs = require("fs");
-const dotenv = require("dotenv");
-dotenv.config();
 
 const IS_GITHUB_ACTION = !!process.env.GITHUB_ACTIONS || process.env.DEBUG;
 
