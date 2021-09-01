@@ -15,49 +15,65 @@ name: Deploy master
 on:
   push:
     branches:
-    - master
+      - master
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout source code
+        uses: actions/checkout@v2
 
-    - name: Checkout source code
-      uses: actions/checkout@v2
+      - name: Generate deployment package
+        run: zip -r deploy.zip . -x '*.git*'
 
-    - name: Generate deployment package
-      run: zip -r deploy.zip . -x '*.git*'
-
-    - name: Deploy to EB
-      uses: einaregilsson/beanstalk-deploy@v18
-      with:
-        aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        application_name: MyApplicationName
-        environment_name: MyApplication-Environment
-        version_label: 12345
-        region: us-west-2
-        deployment_package: deploy.zip
+      - name: Deploy to EB
+        uses: einaregilsson/beanstalk-deploy@v18
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          application_name: MyApplicationName
+          environment_name: MyApplication-Environment
+          version_label: 12345
+          region: us-west-2
+          deployment_package: deploy.zip
 ```
 
 ### Deploying an existing version
 
-You can also use the action to deploy an existing version. To do this simply omit the ```deployment-package``` input parameter.
-The action will then assume that the version you pass in through ```version_label``` already exists in Beanstalk and
+You can also use the action to deploy an existing version. To do this simply omit the `deployment-package` input parameter.
+The action will then assume that the version you pass in through `version_label` already exists in Beanstalk and
 attempt to deploy that. In the example below the action would attempt to deploy existing version 12345.
 
 ```yaml
-    - name: Deploy to EB
-      uses: einaregilsson/beanstalk-deploy@v18
-      with:
-        aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        application_name: MyApplicationName
-        environment_name: MyApplication-Environment
-        version_label: 12345
-        region: us-west-2
+- name: Deploy to EB
+  uses: einaregilsson/beanstalk-deploy@v18
+  with:
+    aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    application_name: MyApplicationName
+    environment_name: MyApplication-Environment
+    version_label: 12345
+    region: us-west-2
 ```
 
+### Deploying a new environment
+
+You can also use the action to deploy a new environment. To do this specify the `new_environment: true` and set your `environment_template`.
+
+```yaml
+- name: Deploy to EB
+  uses: einaregilsson/beanstalk-deploy@v18
+  with:
+    aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    application_name: MyApplicationName
+    environment_name: MyApplication-Environment
+    new_environment: true
+    environment_template: YourTemplateName
+    version_label: 12345
+    region: us-west-2
+```
 
 ### Optional parameters
 
@@ -85,16 +101,21 @@ triggered the build, `version_description: ${{github.SHA}}`.
 `environment_name`: In version 10 this parameter becomes optional. If you don't pass an environment in the action will simply create
 the version but not deploy it anywhere.
 
-`existing_bucket_name` *(since v18)*: Use this to provide an existing bucket name to upload your deployment package to.
-*It will prevent the action from (re)creating a bucket during deployment as well.*
-Omit this parameter to have the action create the bucket. The latter requires the API key used to have the applicable permissions. 
+`new_environment`: Makes the action create a new environment.
+
+`environment_template`: Saved configuration to use in new environment ( required if creating new env.)
+
+`existing_bucket_name` _(since v18)_: Use this to provide an existing bucket name to upload your deployment package to.
+_It will prevent the action from (re)creating a bucket during deployment as well._
+Omit this parameter to have the action create the bucket. The latter requires the API key used to have the applicable permissions.
 
 ### AWS Permissions
 
-It should be enough for your AWS user to have the policies **AWSElasticBeanstalkWebTier** and **AWSElasticBeanstalkManagedUpdatesCustomerRolePolicy** attached 
-to be able to deploy your project. 
+It should be enough for your AWS user to have the policies **AWSElasticBeanstalkWebTier** and **AWSElasticBeanstalkManagedUpdatesCustomerRolePolicy** attached
+to be able to deploy your project.
 
 ### Failure modes
+
 If you're uploading a new version the action will fail if that file already exists in S3, if the application version
 exists in Beanstalk and of course if the deployment fails. The action will wait until Beanstalk reports that the
 environment is running the version you passed in and status is **Ready**. If health is not **Green** when the version is deployed
@@ -104,7 +125,7 @@ the deployment and in those cases we don't want to fail the build.
 
 ## Using beanstalk-deploy as a command line program
 
-Beanstalk-deploy assumes that you have the environment variables ```AWS_ACCESS_KEY_ID``` and ```AWS_SECRET_ACCESS_KEY```
+Beanstalk-deploy assumes that you have the environment variables `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`
 defined. Pass the rest of the parameters in on the command line, like so:
 
 ```
@@ -115,13 +136,13 @@ Just like in the GitHub action you can skip the final file parameter and the pro
 version instead.
 
 The program is available as an [NPM Package](https://www.npmjs.com/package/beanstalk-deploy) so you can install it with
-```npm install -g beanstalk-deploy``` and then you'll have the ```beanstalk-deploy``` command (without .js) available
-everywhere. 
+`npm install -g beanstalk-deploy` and then you'll have the `beanstalk-deploy` command (without .js) available
+everywhere.
 
 ## Caveats
 
-1. The S3 upload is a simple PUT request, we don't handle chunked upload. It has worked fine for files that are a 
-few megabytes in size, if your files are much larger than that it may cause problems.
+1. The S3 upload is a simple PUT request, we don't handle chunked upload. It has worked fine for files that are a
+   few megabytes in size, if your files are much larger than that it may cause problems.
 2. The script does not roll back if a deploy fails.
 3. There is no integration with Git, like there is in the official EB cli. This script only takes an already made zip file and
-deploys it.
+   deploys it.
