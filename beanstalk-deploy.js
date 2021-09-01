@@ -77,19 +77,21 @@ function deployBeanstalkVersion(
   newEnvironment,
   environmentTemplate
 ) {
-  const Operation = newEnvironment ? "CreateEnvironment" : "UpdateEnvironment";
-  const TemplateName = environmentTemplate;
-  return awsApiRequest({
-    service: "elasticbeanstalk",
-    querystring: {
-      Operation,
-      TemplateName,
-      Version: "2010-12-01",
-      ApplicationName: application,
-      EnvironmentName: environmentName,
-      VersionLabel: versionLabel
-    }
-  });
+  const baseOptions = {
+    Version: "2010-12-01",
+    ApplicationName: application,
+    EnvironmentName: environmentName,
+    VersionLabel: versionLabel
+  };
+  if (newEnvironment && environmentTemplate) {
+    return awsApiRequest({
+      ...baseOptions,
+      Operation: "CreateEnvironment",
+      TemplateName: environmentTemplate
+    });
+  } else {
+    return awsApiRequest({ ...baseOptions, Operation: "UpdateEnvironment" });
+  }
 }
 
 function describeEvents(application, environmentName, startTime) {
