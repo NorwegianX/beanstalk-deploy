@@ -1,2 +1,8 @@
 test.zip
 
+node_modules/
+
+*.zip
+yarn.lock
+
+.env

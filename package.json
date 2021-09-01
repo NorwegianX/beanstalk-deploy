@@ -6,7 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "bin" : { "beanstalk-deploy" : "./beanstalk-deploy.js"},
+  "bin": {
+    "beanstalk-deploy": "./beanstalk-deploy.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/einaregilsson/beanstalk-deploy.git"
@@ -23,5 +25,8 @@
   "bugs": {
     "url": "https://github.com/einaregilsson/beanstalk-deploy/issues"
   },
-  "homepage": "https://github.com/einaregilsson/beanstalk-deploy#readme"
+  "homepage": "https://github.com/einaregilsson/beanstalk-deploy#readme",
+  "dependencies": {
+    "dotenv": "^10.0.0"
+  }
 }

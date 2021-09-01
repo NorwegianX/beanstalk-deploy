@@ -1,10 +1,12 @@
 #!/usr/bin/env node
 // Author: Einar Egilsson, https://github.com/einaregilsson/beanstalk-deploy
 
-const awsApiRequest = require("./utils/aws-api-request");
+const awsApiRequest = require("./aws-api-request");
 const fs = require("fs");
+const dotenv = require("dotenv");
+dotenv.config();
 
-const IS_GITHUB_ACTION = !!process.env.GITHUB_ACTIONS;
+const IS_GITHUB_ACTION = !!process.env.GITHUB_ACTIONS || process.env.DEBUG;
 
 if (IS_GITHUB_ACTION) {
   console.error = msg => console.log(`::error::${msg}`);
@@ -74,13 +76,16 @@ function deployBeanstalkVersion(
   application,
   environmentName,
   versionLabel,
-  newEnvironment
+  newEnvironment,
+  environmentTemplate
 ) {
   const Operation = newEnvironment ? "CreateEnvironment" : "UpdateEnvironment";
+  const TemplateName = environmentTemplate;
   return awsApiRequest({
     service: "elasticbeanstalk",
     querystring: {
       Operation,
+      TemplateName,
       Version: "2010-12-01",
       ApplicationName: application,
       EnvironmentName: environmentName,
@@ -152,7 +157,8 @@ function deployNewVersion(
   bucket,
   waitUntilDeploymentIsFinished,
   waitForRecoverySeconds,
-  newEnvironment
+  newEnvironment,
+  environmentTemplate
 ) {
   //Lots of characters that will mess up an S3 filename, so only allow alphanumeric, - and _ in the actual file name.
   //The version label can still contain all that other stuff though.
@@ -223,7 +229,8 @@ function deployNewVersion(
         application,
         environmentName,
         versionLabel,
-        newEnvironment
+        newEnvironment,
+        environmentTemplate
       );
     })
     .then(result => {
@@ -379,6 +386,7 @@ function main() {
     region,
     file,
     newEnvironment,
+    environmentTemplate,
     existingBucketName = null,
     useExistingVersionIfAvailable,
     waitForRecoverySeconds = 30,
@@ -392,6 +400,7 @@ function main() {
     versionDescription = strip(process.env.INPUT_VERSION_DESCRIPTION);
     file = strip(process.env.INPUT_DEPLOYMENT_PACKAGE);
     newEnvironment = strip(process.env.NEW_ENVIRONMENT);
+    environmentTemplate = strip(process.env.ENVIRONMENT_TEMPLATE);
 
     awsApiRequest.accessKey = strip(process.env.INPUT_AWS_ACCESS_KEY);
     awsApiRequest.secretKey = strip(process.env.INPUT_AWS_SECRET_KEY);
@@ -440,7 +449,9 @@ function main() {
       environmentName,
       versionLabel,
       region,
-      file
+      file,
+      newEnvironment,
+      environmentTemplate
     ] = process.argv.slice(2);
     versionDescription = ""; //Not available for this.
     useExistingVersionIfAvailable = false; //This option is not available in the console version
@@ -467,6 +478,13 @@ function main() {
   }
   if (!awsApiRequest.secretKey) {
     console.error("Deployment failed: AWS Secret Key not specified!");
+    process.exit(2);
+  }
+
+  if (newEnvironment && !environmentTemplate) {
+    console.error(
+      "Deployment failed: new environment set but template not specified!"
+    );
     process.exit(2);
   }
 
@@ -497,6 +515,7 @@ function main() {
   console.log(" Wait for deployment: " + waitUntilDeploymentIsFinished);
   console.log("  Recovery wait time: " + waitForRecoverySeconds);
   console.log("  New Environment: " + newEnvironment);
+  console.log("  Environment template: " + environmentTemplate);
   console.log("");
 
   getApplicationVersion(application, versionLabel)
@@ -548,7 +567,8 @@ function main() {
             existingBucketName,
             waitUntilDeploymentIsFinished,
             waitForRecoverySeconds,
-            newEnvironment
+            newEnvironment,
+            environmentTemplate
           );
         } else {
           console.error(
