@@ -75,7 +75,7 @@ function deployBeanstalkVersion(
   environmentName,
   versionLabel,
   newEnvironment,
-  environmentTemplate
+  environmentTemplate = ""
 ) {
   const Operation = newEnvironment ? "CreateEnvironment" : "UpdateEnvironment";
   const TemplateName = environmentTemplate;
@@ -397,8 +397,8 @@ function main() {
     versionLabel = strip(process.env.INPUT_VERSION_LABEL);
     versionDescription = strip(process.env.INPUT_VERSION_DESCRIPTION);
     file = strip(process.env.INPUT_DEPLOYMENT_PACKAGE);
-    newEnvironment = strip(process.env.NEW_ENVIRONMENT);
-    environmentTemplate = strip(process.env.ENVIRONMENT_TEMPLATE);
+    newEnvironment = strip(process.env.INPUT_NEW_ENVIRONMENT);
+    environmentTemplate = strip(process.env.INPUT_ENVIRONMENT_TEMPLATE);
 
     awsApiRequest.accessKey = strip(process.env.INPUT_AWS_ACCESS_KEY);
     awsApiRequest.secretKey = strip(process.env.INPUT_AWS_SECRET_KEY);
