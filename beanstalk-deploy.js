@@ -419,7 +419,7 @@ function main() {
     file = strip(process.env.INPUT_DEPLOYMENT_PACKAGE);
     newEnvironment = strip(process.env.INPUT_NEW_ENVIRONMENT);
     environmentTemplate = strip(process.env.INPUT_ENVIRONMENT_TEMPLATE);
-    environmentOptions = strip(process.env.INPUT_ENVIRONMENT_OPTIONS);
+    environmentOptions = JSON.parse(process.env.INPUT_ENVIRONMENT_OPTIONS);
 
     awsApiRequest.accessKey = strip(process.env.INPUT_AWS_ACCESS_KEY);
     awsApiRequest.secretKey = strip(process.env.INPUT_AWS_SECRET_KEY);
