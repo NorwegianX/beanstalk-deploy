@@ -68,9 +68,11 @@ You can also use the action to deploy a new environment. To do this specify the 
     aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
     aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     application_name: MyApplicationName
-    environment_name: MyApplication-Environment
     new_environment: true
+    environment_name: MyApplication-Environment
     environment_template: YourTemplateName
+    environment_options:
+      - OPTION_NAME: VALUE
     version_label: 12345
     region: us-west-2
 ```
@@ -104,6 +106,8 @@ the version but not deploy it anywhere.
 `new_environment`: Makes the action create a new environment.
 
 `environment_template`: Saved configuration to use in new environment ( required if creating new env.)
+
+`environment_options`: Setting EB Env variables.
 
 `existing_bucket_name` _(since v18)_: Use this to provide an existing bucket name to upload your deployment package to.
 _It will prevent the action from (re)creating a bucket during deployment as well._

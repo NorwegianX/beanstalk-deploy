@@ -29,6 +29,9 @@ inputs:
   environment_template:
     description: "Required for creating new environments"
     required: false
+  environment_options:
+    description: "Setting EB Variables"
+    required: false
   version_label:
     description: "Version label for new Beanstalk version"
     required: true

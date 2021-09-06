@@ -75,7 +75,8 @@ function deployBeanstalkVersion(
   environmentName,
   versionLabel,
   newEnvironment,
-  environmentTemplate
+  environmentTemplate,
+  environmentOptions
 ) {
   var request = {
     service: "elasticbeanstalk",
@@ -92,6 +93,21 @@ function deployBeanstalkVersion(
   } else {
     request.querystring.Operation = "UpdateEnvironment";
   }
+
+  const OptionSettings = {
+    member: {}
+  };
+  for (let key in environmentOptions) {
+    const number = Object.keys(OptionSettings.member).length + 1;
+    OptionSettings.member[number] = {
+      Namespace: "aws:elasticbeanstalk:application:environment",
+      OptionName: key,
+      Value: environmentOptions[key]
+    };
+  }
+
+  request.OptionSettings = OptionSettings;
+
   return awsApiRequest(request);
 }
 
@@ -388,6 +404,7 @@ function main() {
     file,
     newEnvironment,
     environmentTemplate,
+    environmentOptions,
     existingBucketName = null,
     useExistingVersionIfAvailable,
     waitForRecoverySeconds = 30,
@@ -402,6 +419,7 @@ function main() {
     file = strip(process.env.INPUT_DEPLOYMENT_PACKAGE);
     newEnvironment = strip(process.env.INPUT_NEW_ENVIRONMENT);
     environmentTemplate = strip(process.env.INPUT_ENVIRONMENT_TEMPLATE);
+    environmentOptions = strip(process.env.INPUT_ENVIRONMENT_OPTIONS);
 
     awsApiRequest.accessKey = strip(process.env.INPUT_AWS_ACCESS_KEY);
     awsApiRequest.secretKey = strip(process.env.INPUT_AWS_SECRET_KEY);
@@ -452,7 +470,8 @@ function main() {
       region,
       file,
       newEnvironment,
-      environmentTemplate
+      environmentTemplate,
+      environmentOptions
     ] = process.argv.slice(2);
     versionDescription = ""; //Not available for this.
     useExistingVersionIfAvailable = false; //This option is not available in the console version
@@ -517,6 +536,7 @@ function main() {
   console.log("  Recovery wait time: " + waitForRecoverySeconds);
   console.log("  New Environment: " + newEnvironment);
   console.log("  Environment template: " + environmentTemplate);
+  console.log("  Environment options: " + environmentOptions);
   console.log("");
 
   getApplicationVersion(application, versionLabel)
@@ -569,7 +589,8 @@ function main() {
             waitUntilDeploymentIsFinished,
             waitForRecoverySeconds,
             newEnvironment,
-            environmentTemplate
+            environmentTemplate,
+            environmentOptions
           );
         } else {
           console.error(
