@@ -76,7 +76,8 @@ function deployBeanstalkVersion(
   versionLabel,
   newEnvironment,
   environmentTemplate,
-  environmentOptions
+  environmentOptions,
+  databasePassword
 ) {
   var request = {
     service: "elasticbeanstalk",
@@ -95,6 +96,17 @@ function deployBeanstalkVersion(
   }
 
   var number = 1;
+  if (databasePassword) {
+    request.querystring[`OptionSettings.member.${number}.Namespace`] =
+      "aws:elasticbeanstalk:application:rds";
+    request.querystring[`OptionSettings.member.${number}.OptionName`] =
+      "DB_PASSWORD";
+    request.querystring[
+      `OptionSettings.member.${number}.Value`
+    ] = databasePassword;
+    number++;
+  }
+
   for (let key in environmentOptions) {
     request.querystring[`OptionSettings.member.${number}.Namespace`] =
       "aws:elasticbeanstalk:application:environment";
@@ -173,7 +185,8 @@ function deployNewVersion(
   waitForRecoverySeconds,
   newEnvironment,
   environmentTemplate,
-  environmentOptions
+  environmentOptions,
+  databasePassword
 ) {
   //Lots of characters that will mess up an S3 filename, so only allow alphanumeric, - and _ in the actual file name.
   //The version label can still contain all that other stuff though.
@@ -246,7 +259,8 @@ function deployNewVersion(
         versionLabel,
         newEnvironment,
         environmentTemplate,
-        environmentOptions
+        environmentOptions,
+        databasePassword
       );
     })
     .then(result => {
@@ -404,6 +418,7 @@ function main() {
     newEnvironment,
     environmentTemplate,
     environmentOptions,
+    databasePassword,
     existingBucketName = null,
     useExistingVersionIfAvailable,
     waitForRecoverySeconds = 30,
@@ -419,6 +434,7 @@ function main() {
     newEnvironment = strip(process.env.INPUT_NEW_ENVIRONMENT);
     environmentTemplate = strip(process.env.INPUT_ENVIRONMENT_TEMPLATE);
     environmentOptions = JSON.parse(process.env.INPUT_ENVIRONMENT_OPTIONS);
+    databasePassword = strip(process.env.INPUT_DATABASE_PASSWORD);
 
     awsApiRequest.accessKey = strip(process.env.INPUT_AWS_ACCESS_KEY);
     awsApiRequest.secretKey = strip(process.env.INPUT_AWS_SECRET_KEY);
@@ -470,7 +486,8 @@ function main() {
       file,
       newEnvironment,
       environmentTemplate,
-      environmentOptions
+      environmentOptions,
+      databasePassword
     ] = process.argv.slice(2);
     versionDescription = ""; //Not available for this.
     useExistingVersionIfAvailable = false; //This option is not available in the console version
@@ -589,7 +606,8 @@ function main() {
             waitForRecoverySeconds,
             newEnvironment,
             environmentTemplate,
-            environmentOptions
+            environmentOptions,
+            databasePassword
           );
         } else {
           console.error(

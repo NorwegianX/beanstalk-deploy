@@ -32,6 +32,9 @@ inputs:
   environment_options:
     description: "Setting EB Variables"
     required: false
+  database_password:
+    description: "Inject database password to Cloudformation config"
+    required: false
   version_label:
     description: "Version label for new Beanstalk version"
     required: true

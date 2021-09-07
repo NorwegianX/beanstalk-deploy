@@ -71,8 +71,8 @@ You can also use the action to deploy a new environment. To do this specify the 
     new_environment: true
     environment_name: MyApplication-Environment
     environment_template: YourTemplateName
-    environment_options:
-      - OPTION_NAME: VALUE
+    environment_options: '{ "OPTION_NAME": VALUE }'
+    database_password: PASSWORD
     version_label: 12345
     region: us-west-2
 ```
@@ -108,6 +108,8 @@ the version but not deploy it anywhere.
 `environment_template`: Saved configuration to use in new environment ( required if creating new env.)
 
 `environment_options`: Setting EB Env variables.
+
+`database_password`: Inject database password into Cloudformation environment: aws:elasticbeanstalk:application:rds
 
 `existing_bucket_name` _(since v18)_: Use this to provide an existing bucket name to upload your deployment package to.
 _It will prevent the action from (re)creating a bucket during deployment as well._
