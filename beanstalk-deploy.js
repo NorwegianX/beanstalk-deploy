@@ -94,13 +94,11 @@ function deployBeanstalkVersion(
     request.querystring.Operation = "UpdateEnvironment";
   }
 
-  console.log(environmentOptions);
   const OptionSettings = {
     member: {}
   };
   for (let key in environmentOptions) {
     const number = Object.keys(OptionSettings.member).length + 1;
-    console.log("Setting key", key, number);
     OptionSettings.member[number] = {
       Namespace: "aws:elasticbeanstalk:application:environment",
       OptionName: key,
@@ -108,9 +106,9 @@ function deployBeanstalkVersion(
     };
   }
 
-  request.OptionSettings = OptionSettings;
+  request.querystring.OptionSettings = OptionSettings;
 
-  console.log("Creating new environment: ", request);
+  console.log("Creating new environment: ", JSON.stringify(request, null, 2));
 
   return awsApiRequest(request);
 }
