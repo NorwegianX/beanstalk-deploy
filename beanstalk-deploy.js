@@ -98,7 +98,7 @@ function deployBeanstalkVersion(
   var number = 1;
   if (databasePassword) {
     request.querystring[`OptionSettings.member.${number}.Namespace`] =
-      "aws:elasticbeanstalk:application:rds";
+      "aws:elasticbeanstalk:customoption";
     request.querystring[`OptionSettings.member.${number}.OptionName`] =
       "DB_PASSWORD";
     request.querystring[
