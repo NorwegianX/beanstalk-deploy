@@ -94,13 +94,14 @@ function deployBeanstalkVersion(
     request.querystring.Operation = "UpdateEnvironment";
   }
 
+  var number = 1;
   for (let key in environmentOptions) {
-    const number = Object.keys(OptionSettings.member).length + 1;
     request.querystring[`OptionSettings.member.${number}.Namespace`] =
       "aws:elasticbeanstalk:application:environment";
     request.querystring[`OptionSettings.member.${number}.OptionName`] = key;
     request.querystring[`OptionSettings.member.${number}.Value`] =
       environmentOptions[key];
+    number++;
   }
   console.log("Creating new environment: ", JSON.stringify(request, null, 2));
 
