@@ -94,11 +94,13 @@ function deployBeanstalkVersion(
     request.querystring.Operation = "UpdateEnvironment";
   }
 
+  console.log(environmentOptions);
   const OptionSettings = {
     member: {}
   };
   for (let key in environmentOptions) {
     const number = Object.keys(OptionSettings.member).length + 1;
+    console.log("Setting key", key, number);
     OptionSettings.member[number] = {
       Namespace: "aws:elasticbeanstalk:application:environment",
       OptionName: key,
@@ -177,7 +179,8 @@ function deployNewVersion(
   waitUntilDeploymentIsFinished,
   waitForRecoverySeconds,
   newEnvironment,
-  environmentTemplate
+  environmentTemplate,
+  environmentOptions
 ) {
   //Lots of characters that will mess up an S3 filename, so only allow alphanumeric, - and _ in the actual file name.
   //The version label can still contain all that other stuff though.
@@ -249,7 +252,8 @@ function deployNewVersion(
         environmentName,
         versionLabel,
         newEnvironment,
-        environmentTemplate
+        environmentTemplate,
+        environmentOptions
       );
     })
     .then(result => {
@@ -538,7 +542,7 @@ function main() {
   console.log("  Recovery wait time: " + waitForRecoverySeconds);
   console.log("  New Environment: " + newEnvironment);
   console.log("  Environment template: " + environmentTemplate);
-  console.log("  Environment options: " + environmentOptions);
+  console.log("  Environment options: ", environmentOptions);
   console.log("");
 
   getApplicationVersion(application, versionLabel)
