@@ -108,6 +108,8 @@ function deployBeanstalkVersion(
 
   request.OptionSettings = OptionSettings;
 
+  console.log("Creating new environment: ", request);
+
   return awsApiRequest(request);
 }
 
