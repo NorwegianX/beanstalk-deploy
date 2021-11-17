@@ -88,9 +88,11 @@ function deployBeanstalkVersion(
       VersionLabel: versionLabel,
     },
   };
-  if (newEnvironment && environmentTemplate) {
+  if (newEnvironment) {
     request.querystring.Operation = "CreateEnvironment";
-    request.querystring.TemplateName = environmentTemplate;
+    if (environmentTemplate) {
+      request.querystring.TemplateName = environmentTemplate;
+    }
   } else {
     request.querystring.Operation = "UpdateEnvironment";
   }
