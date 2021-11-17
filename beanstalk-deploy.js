@@ -7,14 +7,14 @@ const fs = require("fs");
 const IS_GITHUB_ACTION = !!process.env.GITHUB_ACTIONS || process.env.DEBUG;
 
 if (IS_GITHUB_ACTION) {
-  console.error = msg => console.log(`::error::${msg}`);
-  console.warn = msg => console.log(`::warning::${msg}`);
+  console.error = (msg) => console.log(`::error::${msg}`);
+  console.warn = (msg) => console.log(`::warning::${msg}`);
 }
 
 function createStorageLocation() {
   return awsApiRequest({
     service: "elasticbeanstalk",
-    querystring: { Operation: "CreateStorageLocation", Version: "2010-12-01" }
+    querystring: { Operation: "CreateStorageLocation", Version: "2010-12-01" },
   });
 }
 
@@ -23,7 +23,7 @@ function checkIfFileExistsInS3(bucket, s3Key) {
     service: "s3",
     host: `${bucket}.s3.${awsApiRequest.region}.amazonaws.com`,
     path: s3Key,
-    method: "HEAD"
+    method: "HEAD",
   });
 }
 
@@ -45,7 +45,7 @@ function uploadFileToS3(bucket, s3Key, filebuffer) {
     path: s3Key,
     method: "PUT",
     headers: { "Content-Type": "application/octet-stream" },
-    payload: filebuffer
+    payload: filebuffer,
   });
 }
 
@@ -65,8 +65,8 @@ function createBeanstalkVersion(
       VersionLabel: versionLabel,
       Description: versionDescription,
       "SourceBundle.S3Bucket": bucket,
-      "SourceBundle.S3Key": s3Key.substr(1) //Don't want leading / here
-    }
+      "SourceBundle.S3Key": s3Key.substr(1), //Don't want leading / here
+    },
   });
 }
 
@@ -85,8 +85,8 @@ function deployBeanstalkVersion(
       Version: "2010-12-01",
       ApplicationName: application,
       EnvironmentName: environmentName,
-      VersionLabel: versionLabel
-    }
+      VersionLabel: versionLabel,
+    },
   };
   if (newEnvironment && environmentTemplate) {
     request.querystring.Operation = "CreateEnvironment";
@@ -129,8 +129,8 @@ function describeEvents(application, environmentName, startTime) {
       ApplicationName: application,
       Severity: "TRACE",
       EnvironmentName: environmentName,
-      StartTime: startTime.toISOString().replace(/(-|:|\.\d\d\d)/g, "")
-    }
+      StartTime: startTime.toISOString().replace(/(-|:|\.\d\d\d)/g, ""),
+    },
   });
 }
 
@@ -141,8 +141,8 @@ function describeEnvironments(application, environmentName) {
       Operation: "DescribeEnvironments",
       Version: "2010-12-01",
       ApplicationName: application,
-      "EnvironmentNames.members.1": environmentName //Yes, that's the horrible way to pass an array...
-    }
+      "EnvironmentNames.members.1": environmentName, //Yes, that's the horrible way to pass an array...
+    },
   });
 }
 
@@ -153,8 +153,8 @@ function getApplicationVersion(application, versionLabel) {
       Operation: "DescribeApplicationVersions",
       Version: "2010-12-01",
       ApplicationName: application,
-      "VersionLabels.members.1": versionLabel //Yes, that's the horrible way to pass an array...
-    }
+      "VersionLabels.members.1": versionLabel, //Yes, that's the horrible way to pass an array...
+    },
   });
 }
 
@@ -196,7 +196,7 @@ function deployNewVersion(
   let deployStart, fileBuffer;
 
   readFile(file)
-    .then(result => {
+    .then((result) => {
       fileBuffer = result;
 
       if (bucket === null) {
@@ -206,7 +206,7 @@ function deployNewVersion(
         return createStorageLocation();
       }
     })
-    .then(result => {
+    .then((result) => {
       if (bucket === null) {
         expect(200, result, "Failed to create storage location");
         bucket =
@@ -218,14 +218,14 @@ function deployNewVersion(
 
       return checkIfFileExistsInS3(bucket, s3Key);
     })
-    .then(result => {
+    .then((result) => {
       if (result.statusCode === 200) {
         throw new Error(`Version ${versionLabel} already exists in S3!`);
       }
       expect(404, result);
       return uploadFileToS3(bucket, s3Key, fileBuffer);
     })
-    .then(result => {
+    .then((result) => {
       expect(200, result);
       console.log(
         `New build successfully uploaded to S3, bucket=${bucket}, key=${s3Key}`
@@ -238,7 +238,7 @@ function deployNewVersion(
         versionDescription
       );
     })
-    .then(result => {
+    .then((result) => {
       expect(200, result);
       console.log(
         `Created new application version ${versionLabel} in Beanstalk.`
@@ -263,7 +263,7 @@ function deployNewVersion(
         databasePassword
       );
     })
-    .then(result => {
+    .then((result) => {
       expect(200, result);
 
       if (waitUntilDeploymentIsFinished) {
@@ -285,7 +285,7 @@ function deployNewVersion(
         process.exit(0);
       }
     })
-    .then(envAfterDeployment => {
+    .then((envAfterDeployment) => {
       if (envAfterDeployment.Health === "Green") {
         console.log("Environment update successful!");
         process.exit(0);
@@ -296,7 +296,7 @@ function deployNewVersion(
         process.exit(1);
       }
     })
-    .catch(err => {
+    .catch((err) => {
       console.error(`Deployment failed: ${err}`);
       process.exit(2);
     });
@@ -324,7 +324,7 @@ function deployExistingVersion(
   console.log(`Deploying existing version ${versionLabel}`);
 
   deployBeanstalkVersion(application, environmentName, versionLabel)
-    .then(result => {
+    .then((result) => {
       if (result.statusCode !== 200) {
         if (result.headers["content-type"] !== "application/json") {
           //Not something we know how to handle ...
@@ -369,7 +369,7 @@ function deployExistingVersion(
         process.exit(0);
       }
     })
-    .then(envAfterDeployment => {
+    .then((envAfterDeployment) => {
       if (envAfterDeployment.Health === "Green") {
         console.log("Environment update successful!");
         process.exit(0);
@@ -380,7 +380,7 @@ function deployExistingVersion(
         process.exit(1);
       }
     })
-    .catch(err => {
+    .catch((err) => {
       if (err.Code === "Throttled") {
         console.log(
           `Call to deploy version was throttled. Waiting for 10 seconds before trying again ...`
@@ -487,7 +487,7 @@ function main() {
       newEnvironment,
       environmentTemplate,
       environmentOptions,
-      databasePassword
+      databasePassword,
     ] = process.argv.slice(2);
     versionDescription = ""; //Not available for this.
     useExistingVersionIfAvailable = false; //This option is not available in the console version
@@ -514,13 +514,6 @@ function main() {
   }
   if (!awsApiRequest.secretKey) {
     console.error("Deployment failed: AWS Secret Key not specified!");
-    process.exit(2);
-  }
-
-  if (newEnvironment && !environmentTemplate) {
-    console.error(
-      "Deployment failed: new environment set but template not specified!"
-    );
     process.exit(2);
   }
 
@@ -556,7 +549,7 @@ function main() {
   console.log("");
 
   getApplicationVersion(application, versionLabel)
-    .then(result => {
+    .then((result) => {
       expect(200, result);
 
       let versionsList =
@@ -617,7 +610,7 @@ function main() {
         }
       }
     })
-    .catch(err => {
+    .catch((err) => {
       console.error(`Deployment failed: ${err}`);
       process.exit(2);
     });
@@ -667,7 +660,7 @@ function waitForDeployment(
       }
 
       describeEvents(application, environmentName, start)
-        .then(result => {
+        .then((result) => {
           eventCalls++;
 
           //Allow a few throttling failures...
@@ -707,7 +700,7 @@ function waitForDeployment(
         .catch(reject);
 
       describeEnvironments(application, environmentName)
-        .then(result => {
+        .then((result) => {
           environmentCalls++;
 
           //Allow a few throttling failures...
