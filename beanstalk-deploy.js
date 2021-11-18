@@ -170,7 +170,8 @@ function describeEnvironments(application, environmentName) {
   });
 }
 
-function getApplicationVersion(application, versionLabel) {
+function getApplicationVersion(application, versionLabel = undefined) {
+  if (versionLabel === undefined) return null;
   return awsApiRequest({
     service: "elasticbeanstalk",
     querystring: {
@@ -576,12 +577,14 @@ function main() {
 
   getApplicationVersion(application, versionLabel)
     .then((result) => {
-      expect(200, result);
-
-      let versionsList =
-        result.data.DescribeApplicationVersionsResponse
-          .DescribeApplicationVersionsResult.ApplicationVersions;
-      let versionAlreadyExists = versionsList.length === 1;
+      let versionsList, versionAlreadyExists;
+      if (result) {
+        expect(200, result);
+        versionsList =
+          result.data.DescribeApplicationVersionsResponse
+            .DescribeApplicationVersionsResult.ApplicationVersions;
+        versionAlreadyExists = versionsList.length === 1;
+      }
 
       if (versionAlreadyExists) {
         if (!environmentName) {
@@ -613,7 +616,7 @@ function main() {
           );
         }
       } else {
-        if (file) {
+        if (file || terminateEnvironment) {
           deployNewVersion(
             application,
             environmentName,
