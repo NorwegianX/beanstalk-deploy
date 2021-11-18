@@ -779,7 +779,7 @@ function waitForDeployment(
               .Environments[0];
 
           if (!versionLabel && env.Status === "Terminated") {
-            resolve(env);
+            return resolve(env);
           }
 
           if (
