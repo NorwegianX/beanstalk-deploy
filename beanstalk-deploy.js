@@ -76,6 +76,7 @@ function deployBeanstalkVersion(
   versionLabel,
   newEnvironment,
   environmentTemplate,
+  solutionStackName,
   environmentOptions,
   databasePassword
 ) {
@@ -92,6 +93,8 @@ function deployBeanstalkVersion(
     request.querystring.Operation = "CreateEnvironment";
     if (environmentTemplate) {
       request.querystring.TemplateName = environmentTemplate;
+    } else if (solutionStackName) {
+      request.querystring.SolutionStackName = solutionStackName;
     }
   } else {
     request.querystring.Operation = "UpdateEnvironment";
@@ -187,6 +190,7 @@ function deployNewVersion(
   waitForRecoverySeconds,
   newEnvironment,
   environmentTemplate,
+  solutionStackName,
   environmentOptions,
   databasePassword
 ) {
@@ -261,6 +265,7 @@ function deployNewVersion(
         versionLabel,
         newEnvironment,
         environmentTemplate,
+        solutionStackName,
         environmentOptions,
         databasePassword
       );
@@ -419,6 +424,7 @@ function main() {
     file,
     newEnvironment,
     environmentTemplate,
+    solutionStackName,
     environmentOptions,
     databasePassword,
     existingBucketName = null,
@@ -435,6 +441,7 @@ function main() {
     file = strip(process.env.INPUT_DEPLOYMENT_PACKAGE);
     newEnvironment = strip(process.env.INPUT_NEW_ENVIRONMENT);
     environmentTemplate = strip(process.env.INPUT_ENVIRONMENT_TEMPLATE);
+    solutionStackName = strip(process.env.INPUT_SOLUTION_STACK_NAME);
     environmentOptions = JSON.parse(process.env.INPUT_ENVIRONMENT_OPTIONS);
     databasePassword = strip(process.env.INPUT_DATABASE_PASSWORD);
 
@@ -488,6 +495,7 @@ function main() {
       file,
       newEnvironment,
       environmentTemplate,
+      solutionStackName,
       environmentOptions,
       databasePassword,
     ] = process.argv.slice(2);
@@ -523,6 +531,13 @@ function main() {
     versionDescription = versionDescription.substr(0, 185) + " [...TRUNCATED]";
   }
 
+  if (newEnvironment && !environmentTemplate && !solutionStackName) {
+    console.error(
+      "Deployment failed: new environment set but template not specified!"
+    );
+    process.exit(2);
+  }
+
   console.log(" ***** Input parameters were: ***** ");
   console.log("         Application: " + application);
   console.log("         Environment: " + environmentName);
@@ -547,6 +562,7 @@ function main() {
   console.log("  Recovery wait time: " + waitForRecoverySeconds);
   console.log("  New Environment: " + newEnvironment);
   console.log("  Environment template: " + environmentTemplate);
+  console.log("  Solution Stack Name: " + solutionStackName);
   console.log("  Environment options: ", environmentOptions);
   console.log("");
 
@@ -601,6 +617,7 @@ function main() {
             waitForRecoverySeconds,
             newEnvironment,
             environmentTemplate,
+            solutionStackName,
             environmentOptions,
             databasePassword
           );
