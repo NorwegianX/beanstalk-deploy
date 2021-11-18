@@ -105,6 +105,14 @@ function deployBeanstalkVersion(
     request.querystring[`OptionSettings.member.${number}.Value`] =
       "aws-elasticbeanstalk-ec2-role";
     number++;
+
+    request.querystring[`OptionSettings.member.${number}.Namespace`] =
+      "aws:elasticbeanstalk:environment";
+    request.querystring[`OptionSettings.member.${number}.OptionName`] =
+      "LoadBalancerType";
+    request.querystring[`OptionSettings.member.${number}.Value`] =
+      "application";
+    number++;
   } else {
     request.querystring.Operation = "UpdateEnvironment";
   }
