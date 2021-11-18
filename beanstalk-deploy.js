@@ -171,7 +171,9 @@ function describeEnvironments(application, environmentName) {
 }
 
 function getApplicationVersion(application, versionLabel = undefined) {
+  console.log("GETTING APPLICATION VERSION ", versionLabel);
   if (versionLabel === undefined) return null;
+  console.log("Got here");
   return awsApiRequest({
     service: "elasticbeanstalk",
     querystring: {
@@ -460,6 +462,9 @@ function main() {
     application = strip(process.env.INPUT_APPLICATION_NAME);
     environmentName = strip(process.env.INPUT_ENVIRONMENT_NAME);
     versionLabel = strip(process.env.INPUT_VERSION_LABEL);
+    if (versionLabel === null || versionLabel === "") {
+      versionLabel = undefined;
+    }
     versionDescription = strip(process.env.INPUT_VERSION_DESCRIPTION);
     file = strip(process.env.INPUT_DEPLOYMENT_PACKAGE);
     newEnvironment = strip(process.env.INPUT_NEW_ENVIRONMENT);
