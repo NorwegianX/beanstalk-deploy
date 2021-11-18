@@ -777,6 +777,11 @@ function waitForDeployment(
           let env =
             result.data.DescribeEnvironmentsResponse.DescribeEnvironmentsResult
               .Environments[0];
+
+          if (!versionLabel && env.Status === "Terminated") {
+            resolve(env);
+          }
+
           if (
             env.Status === "Ready" &&
             (!versionLabel ||
