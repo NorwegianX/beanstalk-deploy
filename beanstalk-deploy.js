@@ -584,6 +584,13 @@ function main() {
 
   if (terminateEnvironment) {
     terminateBeanstalkEnvironment(application, environmentName);
+    waitForDeployment(
+      application,
+      environmentName,
+      versionLabel,
+      new Date(),
+      waitForRecoverySeconds
+    );
   } else {
     getApplicationVersion(application, versionLabel)
       .then((result) => {
@@ -666,7 +673,7 @@ function formatTimespan(since) {
 function waitForDeployment(
   application,
   environmentName,
-  versionLabel,
+  versionLabel = undefined,
   start,
   waitForRecoverySeconds
 ) {
@@ -770,7 +777,11 @@ function waitForDeployment(
           let env =
             result.data.DescribeEnvironmentsResponse.DescribeEnvironmentsResult
               .Environments[0];
-          if (env.VersionLabel === versionLabel && env.Status === "Ready") {
+          if (
+            env.Status === "Ready" &&
+            (!versionLabel ||
+              (versionLabel && env.VersionLabel === versionLabel))
+          ) {
             if (!degraded) {
               console.log(
                 `Deployment finished. Version updated to ${env.VersionLabel}`
