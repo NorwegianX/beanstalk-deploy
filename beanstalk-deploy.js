@@ -89,6 +89,7 @@ function deployBeanstalkVersion(
       VersionLabel: versionLabel,
     },
   };
+  var number = 1;
   if (newEnvironment) {
     request.querystring.Operation = "CreateEnvironment";
     if (environmentTemplate) {
@@ -96,11 +97,18 @@ function deployBeanstalkVersion(
     } else if (solutionStackName) {
       request.querystring.SolutionStackName = solutionStackName;
     }
+
+    request.querystring[`OptionSettings.member.${number}.Namespace`] =
+      "aws:autoscaling:launchconfiguration";
+    request.querystring[`OptionSettings.member.${number}.OptionName`] =
+      "IamInstanceProfile";
+    request.querystring[`OptionSettings.member.${number}.Value`] =
+      "aws-elasticbeanstalk-ec2-role";
+    number++;
   } else {
     request.querystring.Operation = "UpdateEnvironment";
   }
 
-  var number = 1;
   if (databasePassword) {
     request.querystring[`OptionSettings.member.${number}.Namespace`] =
       "aws:elasticbeanstalk:customoption";
