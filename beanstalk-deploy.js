@@ -172,7 +172,7 @@ function describeEnvironments(application, environmentName) {
 
 function getApplicationVersion(application, versionLabel = undefined) {
   console.log("GETTING APPLICATION VERSION ", versionLabel);
-  if (versionLabel === undefined) return null;
+  if (versionLabel === undefined) return Promise.resolve(null);
   console.log("Got here");
   return awsApiRequest({
     service: "elasticbeanstalk",
