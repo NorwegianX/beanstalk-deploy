@@ -75,6 +75,7 @@ function deployBeanstalkVersion(
   environmentName,
   versionLabel,
   newEnvironment,
+  terminateEnvironment,
   environmentTemplate,
   solutionStackName,
   environmentOptions,
@@ -113,6 +114,8 @@ function deployBeanstalkVersion(
     request.querystring[`OptionSettings.member.${number}.Value`] =
       "application";
     number++;
+  } else if (terminateEnvironment) {
+    request.querystring.Operation = "TerminateEnvironment";
   } else {
     request.querystring.Operation = "UpdateEnvironment";
   }
@@ -205,6 +208,7 @@ function deployNewVersion(
   waitUntilDeploymentIsFinished,
   waitForRecoverySeconds,
   newEnvironment,
+  terminateEnvironment,
   environmentTemplate,
   solutionStackName,
   environmentOptions,
@@ -280,6 +284,7 @@ function deployNewVersion(
         environmentName,
         versionLabel,
         newEnvironment,
+        terminateEnvironment,
         environmentTemplate,
         solutionStackName,
         environmentOptions,
@@ -439,6 +444,7 @@ function main() {
     region,
     file,
     newEnvironment,
+    terminateEnvironment,
     environmentTemplate,
     solutionStackName,
     environmentOptions,
@@ -456,6 +462,7 @@ function main() {
     versionDescription = strip(process.env.INPUT_VERSION_DESCRIPTION);
     file = strip(process.env.INPUT_DEPLOYMENT_PACKAGE);
     newEnvironment = strip(process.env.INPUT_NEW_ENVIRONMENT);
+    terminateEnvironment = strip(process.env.INPUT_TERMINATE_ENVIRONMENT);
     environmentTemplate = strip(process.env.INPUT_ENVIRONMENT_TEMPLATE);
     solutionStackName = strip(process.env.INPUT_SOLUTION_STACK_NAME);
     environmentOptions = JSON.parse(process.env.INPUT_ENVIRONMENT_OPTIONS);
@@ -486,23 +493,6 @@ function main() {
       process.env.INPUT_USE_EXISTING_VERSION_IF_AVAILABLE == "True";
   } else {
     //Running as command line script
-    if (process.argv.length < 6) {
-      console.log(
-        "\nbeanstalk-deploy: Deploy a zip file to AWS Elastic Beanstalk"
-      );
-      console.log("https://github.com/einaregilsson/beanstalk-deploy\n");
-      console.log(
-        "Usage: beanstalk-deploy.js <application> <environment> <versionLabel> <region> [<filename>]\n"
-      );
-      console.log(
-        "Environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY must be defined for the program to work."
-      );
-      console.log(
-        "If <filename> is skipped the script will attempt to deploy an existing version named <versionLabel>.\n"
-      );
-      process.exit(1);
-    }
-
     [
       application,
       environmentName,
@@ -510,6 +500,7 @@ function main() {
       region,
       file,
       newEnvironment,
+      terminateEnvironment,
       environmentTemplate,
       solutionStackName,
       environmentOptions,
@@ -577,6 +568,7 @@ function main() {
   console.log(" Wait for deployment: " + waitUntilDeploymentIsFinished);
   console.log("  Recovery wait time: " + waitForRecoverySeconds);
   console.log("  New Environment: " + newEnvironment);
+  console.log("  Terminate Environment: " + terminateEnvironment);
   console.log("  Environment template: " + environmentTemplate);
   console.log("  Solution Stack Name: " + solutionStackName);
   console.log("  Environment options: ", environmentOptions);
@@ -632,6 +624,7 @@ function main() {
             waitUntilDeploymentIsFinished,
             waitForRecoverySeconds,
             newEnvironment,
+            terminateEnvironment,
             environmentTemplate,
             solutionStackName,
             environmentOptions,
