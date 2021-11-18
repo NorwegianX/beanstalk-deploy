@@ -1,4 +1,4 @@
-# Beanstalk Deploy 1
+# Beanstalk Deploy
 
 Beanstalk Deploy is a GitHub action (and command line script) to deploy apps to AWS Elastic Beanstalk. It takes the application
 name, environment name, version name, region and filename as parameters, uploads the file to S3, creates a new version in
