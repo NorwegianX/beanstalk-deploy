@@ -75,7 +75,6 @@ function deployBeanstalkVersion(
   environmentName,
   versionLabel,
   newEnvironment,
-  terminateEnvironment,
   environmentTemplate,
   solutionStackName,
   environmentOptions,
@@ -114,8 +113,6 @@ function deployBeanstalkVersion(
     request.querystring[`OptionSettings.member.${number}.Value`] =
       "application";
     number++;
-  } else if (terminateEnvironment) {
-    request.querystring.Operation = "TerminateEnvironment";
   } else {
     request.querystring.Operation = "UpdateEnvironment";
   }
@@ -141,6 +138,20 @@ function deployBeanstalkVersion(
   }
   console.log("Creating new environment: ", JSON.stringify(request, null, 2));
 
+  return awsApiRequest(request);
+}
+
+function terminateBeanstalkEnvironment(application, environmentName) {
+  var request = {
+    service: "elasticbeanstalk",
+    querystring: {
+      Operation: "TerminateEnvironment",
+      ApplicationName: application,
+      EnvironmentName: environmentName,
+    },
+  };
+
+  console.log("Terminating environment: ", JSON.stringify(request, null, 2));
   return awsApiRequest(request);
 }
 
@@ -171,9 +182,6 @@ function describeEnvironments(application, environmentName) {
 }
 
 function getApplicationVersion(application, versionLabel = undefined) {
-  console.log("GETTING APPLICATION VERSION ", versionLabel);
-  if (versionLabel === undefined) return Promise.resolve(null);
-  console.log("Got here");
   return awsApiRequest({
     service: "elasticbeanstalk",
     querystring: {
@@ -211,7 +219,6 @@ function deployNewVersion(
   waitUntilDeploymentIsFinished,
   waitForRecoverySeconds,
   newEnvironment,
-  terminateEnvironment,
   environmentTemplate,
   solutionStackName,
   environmentOptions,
@@ -287,7 +294,6 @@ function deployNewVersion(
         environmentName,
         versionLabel,
         newEnvironment,
-        terminateEnvironment,
         environmentTemplate,
         solutionStackName,
         environmentOptions,
@@ -447,7 +453,6 @@ function main() {
     region,
     file,
     newEnvironment,
-    terminateEnvironment,
     environmentTemplate,
     solutionStackName,
     environmentOptions,
@@ -462,9 +467,6 @@ function main() {
     application = strip(process.env.INPUT_APPLICATION_NAME);
     environmentName = strip(process.env.INPUT_ENVIRONMENT_NAME);
     versionLabel = strip(process.env.INPUT_VERSION_LABEL);
-    if (versionLabel === null || versionLabel === "") {
-      versionLabel = undefined;
-    }
     versionDescription = strip(process.env.INPUT_VERSION_DESCRIPTION);
     file = strip(process.env.INPUT_DEPLOYMENT_PACKAGE);
     newEnvironment = strip(process.env.INPUT_NEW_ENVIRONMENT);
@@ -580,76 +582,76 @@ function main() {
   console.log("  Environment options: ", environmentOptions);
   console.log("");
 
-  getApplicationVersion(application, versionLabel)
-    .then((result) => {
-      let versionsList, versionAlreadyExists;
-      if (result) {
+  if (terminateEnvironment) {
+    terminateBeanstalkEnvironment(application, environmentName);
+  } else {
+    getApplicationVersion(application, versionLabel)
+      .then((result) => {
         expect(200, result);
-        versionsList =
+        let versionsList =
           result.data.DescribeApplicationVersionsResponse
             .DescribeApplicationVersionsResult.ApplicationVersions;
-        versionAlreadyExists = versionsList.length === 1;
-      }
+        let versionAlreadyExists = versionsList.length === 1;
 
-      if (versionAlreadyExists) {
-        if (!environmentName) {
-          console.error(
-            `You have no environment set, so we are trying to only create version ${versionLabel}, but it already exists in Beanstalk!`
-          );
-          process.exit(2);
-        } else if (file && !useExistingVersionIfAvailable) {
-          console.error(
-            `Deployment failed: Version ${versionLabel} already exists. Either remove the "deployment_package" parameter to deploy existing version, or set the "use_existing_version_if_available" parameter to "true" to use existing version if it exists and deployment package if it doesn't.`
-          );
-          process.exit(2);
-        } else {
-          if (file && useExistingVersionIfAvailable) {
+        if (versionAlreadyExists) {
+          if (!environmentName) {
+            console.error(
+              `You have no environment set, so we are trying to only create version ${versionLabel}, but it already exists in Beanstalk!`
+            );
+            process.exit(2);
+          } else if (file && !useExistingVersionIfAvailable) {
+            console.error(
+              `Deployment failed: Version ${versionLabel} already exists. Either remove the "deployment_package" parameter to deploy existing version, or set the "use_existing_version_if_available" parameter to "true" to use existing version if it exists and deployment package if it doesn't.`
+            );
+            process.exit(2);
+          } else {
+            if (file && useExistingVersionIfAvailable) {
+              console.log(
+                `Ignoring deployment package ${file} since version ${versionLabel} already exists and "use_existing_version_if_available" is set to true.`
+              );
+            }
             console.log(
-              `Ignoring deployment package ${file} since version ${versionLabel} already exists and "use_existing_version_if_available" is set to true.`
+              `Deploying existing version ${versionLabel}, version info:`
+            );
+            console.log(JSON.stringify(versionsList[0], null, 2));
+            deployExistingVersion(
+              application,
+              environmentName,
+              versionLabel,
+              waitUntilDeploymentIsFinished,
+              waitForRecoverySeconds
             );
           }
-          console.log(
-            `Deploying existing version ${versionLabel}, version info:`
-          );
-          console.log(JSON.stringify(versionsList[0], null, 2));
-          deployExistingVersion(
-            application,
-            environmentName,
-            versionLabel,
-            waitUntilDeploymentIsFinished,
-            waitForRecoverySeconds
-          );
-        }
-      } else {
-        if (file || terminateEnvironment) {
-          deployNewVersion(
-            application,
-            environmentName,
-            versionLabel,
-            versionDescription,
-            file,
-            existingBucketName,
-            waitUntilDeploymentIsFinished,
-            waitForRecoverySeconds,
-            newEnvironment,
-            terminateEnvironment,
-            environmentTemplate,
-            solutionStackName,
-            environmentOptions,
-            databasePassword
-          );
         } else {
-          console.error(
-            `Deployment failed: No deployment package given but version ${versionLabel} doesn't exist, so nothing to deploy!`
-          );
-          process.exit(2);
+          if (file) {
+            deployNewVersion(
+              application,
+              environmentName,
+              versionLabel,
+              versionDescription,
+              file,
+              existingBucketName,
+              waitUntilDeploymentIsFinished,
+              waitForRecoverySeconds,
+              newEnvironment,
+              environmentTemplate,
+              solutionStackName,
+              environmentOptions,
+              databasePassword
+            );
+          } else {
+            console.error(
+              `Deployment failed: No deployment package given but version ${versionLabel} doesn't exist, so nothing to deploy!`
+            );
+            process.exit(2);
+          }
         }
-      }
-    })
-    .catch((err) => {
-      console.error(`Deployment failed: ${err}`);
-      process.exit(2);
-    });
+      })
+      .catch((err) => {
+        console.error(`Deployment failed: ${err}`);
+        process.exit(2);
+      });
+  }
 }
 
 function formatTimespan(since) {
