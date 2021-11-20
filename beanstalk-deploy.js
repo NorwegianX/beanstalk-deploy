@@ -369,7 +369,9 @@ function deployExistingVersion(
   databasePassword
 ) {
   let deployStart = new Date();
-  console.log(`Deploying existing version ${versionLabel}`);
+  console.log(
+    `Deploying existing version ${versionLabel}, new env: ${newEnvironment}`
+  );
 
   deployBeanstalkVersion(
     application,
