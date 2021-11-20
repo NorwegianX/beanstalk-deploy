@@ -90,6 +90,7 @@ function deployBeanstalkVersion(
     },
   };
   var number = 1;
+  console.log("NEW ENVIRONMENT", newEnvironment);
   if (newEnvironment) {
     request.querystring.Operation = "CreateEnvironment";
     if (environmentTemplate) {
@@ -374,11 +375,6 @@ function deployExistingVersion(
     application,
     environmentName,
     versionLabel,
-    versionDescription,
-    file,
-    existingBucketName,
-    waitUntilDeploymentIsFinished,
-    waitForRecoverySeconds,
     newEnvironment,
     environmentTemplate,
     solutionStackName,
