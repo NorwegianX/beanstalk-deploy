@@ -356,13 +356,35 @@ function deployExistingVersion(
   application,
   environmentName,
   versionLabel,
+  versionDescription,
+  file,
+  existingBucketName,
   waitUntilDeploymentIsFinished,
-  waitForRecoverySeconds
+  waitForRecoverySeconds,
+  newEnvironment,
+  environmentTemplate,
+  solutionStackName,
+  environmentOptions,
+  databasePassword
 ) {
   let deployStart = new Date();
   console.log(`Deploying existing version ${versionLabel}`);
 
-  deployBeanstalkVersion(application, environmentName, versionLabel)
+  deployBeanstalkVersion(
+    application,
+    environmentName,
+    versionLabel,
+    versionDescription,
+    file,
+    existingBucketName,
+    waitUntilDeploymentIsFinished,
+    waitForRecoverySeconds,
+    newEnvironment,
+    environmentTemplate,
+    solutionStackName,
+    environmentOptions,
+    databasePassword
+  )
     .then((result) => {
       if (result.statusCode !== 200) {
         if (result.headers["content-type"] !== "application/json") {
@@ -430,8 +452,16 @@ function deployExistingVersion(
               application,
               environmentName,
               versionLabel,
+              versionDescription,
+              file,
+              existingBucketName,
               waitUntilDeploymentIsFinished,
-              waitForRecoverySeconds
+              waitForRecoverySeconds,
+              newEnvironment,
+              environmentTemplate,
+              solutionStackName,
+              environmentOptions,
+              databasePassword
             ),
           10 * 1000
         );
@@ -627,8 +657,16 @@ function main() {
               application,
               environmentName,
               versionLabel,
+              versionDescription,
+              file,
+              existingBucketName,
               waitUntilDeploymentIsFinished,
-              waitForRecoverySeconds
+              waitForRecoverySeconds,
+              newEnvironment,
+              environmentTemplate,
+              solutionStackName,
+              environmentOptions,
+              databasePassword
             );
           }
         } else {
